@@ -6,19 +6,30 @@ public class Spawner : MonoBehaviour
     
     [SerializeField] private GameObject[] obstaclePrefabs;
     [SerializeField] private Transform obstacleParent;
-    public float obstacleSpawnTime = 0.25f;
-    public float obstacleSpeed = 1f;
+    public float obstacleSpawnTime = 3f;
+    [Range(0,1)] public float obstacleSpawnTimeFactor = 0.1f;
+    [Range(0,1)] public float obstacleSpeedFactor = 0.2f;
+    public float obstacleSpeed = 4f;
+
+    private float timeAlive;
     private float timeUntilObstacleSpawn;
+    private float _obstacleSpawnTime;
+    private float _obstacleSpeed;
 
 
     void Start()
     {
         GameManager.Instance.onGameOver.AddListener(ClearObstacles);
+        GameManager.Instance.onPlay.AddListener(ResetFactors);
     }
     private void Update()
     {
         if (GameManager.Instance.isPlaying)
         {
+            timeAlive += Time.deltaTime;
+
+            CalculateFactors();
+
             SpawnLoop();
         }
     }
@@ -27,7 +38,7 @@ public class Spawner : MonoBehaviour
     {
         timeUntilObstacleSpawn += Time.deltaTime;
 
-        if (timeUntilObstacleSpawn >= obstacleSpawnTime)
+        if (timeUntilObstacleSpawn >= _obstacleSpawnTime)
         {
             Spawn();
             timeUntilObstacleSpawn = 0f;
@@ -41,6 +52,19 @@ public class Spawner : MonoBehaviour
             Destroy(child.gameObject);
         }
     }
+
+    private void CalculateFactors()
+    {
+        _obstacleSpawnTime = obstacleSpawnTime / Mathf.Pow(timeAlive, obstacleSpawnTimeFactor);
+        _obstacleSpeed = obstacleSpeed * Mathf.Pow(timeAlive, obstacleSpeedFactor);
+    }
+    private void ResetFactors()
+    {
+        timeAlive = 1f;
+        _obstacleSpawnTime = obstacleSpawnTime;
+        _obstacleSpeed = obstacleSpeed;
+
+    }
     private void Spawn()
     {
         GameObject obstacleToSpawn = obstaclePrefabs[UnityEngine.Random.Range(0, obstaclePrefabs.Length)];
@@ -48,7 +72,7 @@ public class Spawner : MonoBehaviour
         spawnedObstacle.transform.parent = obstacleParent;
 
         Rigidbody2D obstacleRB = spawnedObstacle.GetComponent<Rigidbody2D>();
-        obstacleRB.linearVelocity = Vector2.left * obstacleSpeed;
+        obstacleRB.linearVelocity = Vector2.left * _obstacleSpeed;
     }
 
 }
