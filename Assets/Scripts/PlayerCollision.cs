@@ -2,11 +2,21 @@ using UnityEngine;
 
 public class PlayerCollision : MonoBehaviour
 {
+
+    void Start()
+    {
+        GameManager.Instance.onPlay.AddListener(ActivatePlayer);
+    }
+
+    private void ActivatePlayer()
+    {
+        gameObject.SetActive(true);
+    }
     private void OnCollisionEnter2D(Collision2D other)
     {
         if (other.transform.tag == "Obstacle")
         {
-            Destroy(gameObject);
+            gameObject.SetActive(false);
             GameManager.Instance.GameOver();
         }
     }
