@@ -16,10 +16,28 @@ public class GameManager : MonoBehaviour
     #endregion
 
     public float currentScore = 0f;
+    public SaveData saveData;
     public bool isPlaying = false;
     public UnityEvent onPlay = new UnityEvent();
     public UnityEvent onGameOver = new UnityEvent();
 
+
+    void Start()
+    {
+       
+        string loadedData = SaveSystem.Load("save");
+        if (loadedData != null)
+        {
+            saveData = JsonUtility.FromJson<SaveData>(loadedData);
+        }
+        else
+        {
+            saveData = new SaveData();
+        }
+        
+       
+        
+    }
     private void Update()
     {
         if (isPlaying)
@@ -32,16 +50,31 @@ public class GameManager : MonoBehaviour
     {
         onPlay.Invoke();
         isPlaying = true;
+        currentScore = 0;
     }
 
     public void GameOver()
     {
-        onGameOver.Invoke();
-        currentScore = 0;
+        
+        if(saveData.highScore < currentScore)
+        {
+            saveData.highScore = currentScore;
+
+            string saveString = JsonUtility.ToJson(saveData);
+
+            SaveSystem.Save("save", saveString);
+        }
+        
         isPlaying = false;
+        onGameOver.Invoke();
     }
-    public string PrettyScore ()
+    public string PrettyScore()
     {
         return Mathf.RoundToInt(currentScore).ToString();
+    }
+
+    public string PrettyHighScore()
+    {
+        return Mathf.RoundToInt(saveData.highScore).ToString();
     }
 }
